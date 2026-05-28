@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ChevronRight, ChevronLeft, Moon, Sun, Sparkles, Clock, MapPin } from "lucide-react";
-import { trips, eventMeta, type Trip } from "@/data/mockData";
+import { eventMeta, type Trip } from "@/data/mockData";
+import { useTrips } from "@/data/tripsStore";
 import { TripMap } from "./TripMap";
 
 function scoreColor(score: number) {
@@ -10,8 +11,20 @@ function scoreColor(score: number) {
   return "text-destructive";
 }
 
-export function TripHistory() {
+export function TripHistory({ initialSelectedId, onConsumeSelected }: { initialSelectedId?: string | null; onConsumeSelected?: () => void } = {}) {
+  const trips = useTrips();
   const [selected, setSelected] = useState<Trip | null>(null);
+
+  useEffect(() => {
+    if (initialSelectedId) {
+      const t = trips.find((x) => x.id === initialSelectedId);
+      if (t) {
+        setSelected(t);
+        onConsumeSelected?.();
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialSelectedId]);
 
   if (selected) return <TripDetail trip={selected} onBack={() => setSelected(null)} />;
 

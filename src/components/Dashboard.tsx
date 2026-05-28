@@ -1,7 +1,6 @@
 import { Car, Clock, Moon, TrendingUp, AlertTriangle } from "lucide-react";
 import { ScoreRing } from "./ScoreRing";
 import { driverStats } from "@/data/mockData";
-import { toast } from "sonner";
 
 function MetricCard({
   icon: Icon,
@@ -39,7 +38,7 @@ function MetricCard({
   );
 }
 
-export function Dashboard() {
+export function Dashboard({ onStartDrive }: { onStartDrive: () => void }) {
   return (
     <div className="px-5 pb-8 pt-6">
       <div className="flex items-center justify-between">
@@ -100,7 +99,7 @@ export function Dashboard() {
       </div>
 
       <button
-        onClick={() => toast.success("Drive started · GPS tracking active", { description: "Drive safe — your coach is watching." })}
+        onClick={onStartDrive}
         className="mt-6 flex w-full items-center justify-center gap-2 rounded-2xl px-6 py-4 text-base font-semibold text-primary-foreground transition-transform active:scale-[0.98]"
         style={{ background: "var(--gradient-primary)", boxShadow: "var(--shadow-glow)" }}
       >
