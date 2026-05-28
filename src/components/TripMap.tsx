@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { MapContainer, TileLayer, Polyline, CircleMarker, Tooltip, useMap } from "react-leaflet";
 import type { Trip } from "@/data/mockData";
 import { eventMeta } from "@/data/mockData";
@@ -12,7 +12,12 @@ function FitBounds({ route }: { route: [number, number][] }) {
 }
 
 export function TripMap({ trip }: { trip: Trip }) {
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
   const center = trip.route[Math.floor(trip.route.length / 2)];
+  if (!mounted) {
+    return <div className="h-72 w-full rounded-2xl border border-border bg-muted animate-pulse" />;
+  }
   return (
     <div className="h-72 w-full overflow-hidden rounded-2xl border border-border">
       <MapContainer
