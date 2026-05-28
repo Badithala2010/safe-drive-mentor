@@ -74,11 +74,15 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "viewport", content: "width=device-width, initial-scale=1" },
       { title: "DriveReady AI — Smart Coaching for New Drivers" },
       { name: "description", content: "AI-powered driving coach for teens. Track hours, get trip feedback, and let parents stay in the loop." },
-      { property: "og:title", content: "DriveReady AI" },
-      { property: "og:description", content: "AI-powered driving coach for teens." },
+      { property: "og:title", content: "DriveReady AI — Smart Coaching for New Drivers" },
+      { property: "og:description", content: "AI-powered driving coach for teens. Track hours, get trip feedback, and let parents stay in the loop." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
       { name: "twitter:site", content: "@Lovable" },
+      { name: "twitter:title", content: "DriveReady AI — Smart Coaching for New Drivers" },
+      { name: "twitter:description", content: "AI-powered driving coach for teens. Track hours, get trip feedback, and let parents stay in the loop." },
+      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/bcf4ac66-6c5a-4257-b965-b4a45c7df07f/id-preview-1db9fc43--14907ab7-401e-4372-acc3-15a5a76a3223.lovable.app-1780005201166.png" },
+      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/bcf4ac66-6c5a-4257-b965-b4a45c7df07f/id-preview-1db9fc43--14907ab7-401e-4372-acc3-15a5a76a3223.lovable.app-1780005201166.png" },
     ],
     links: [
       {
