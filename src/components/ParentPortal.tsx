@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Shield, AlertTriangle, CheckCircle2, Bell, TrendingUp } from "lucide-react";
-import { trips, parentAlerts, driverStats } from "@/data/mockData";
+import { parentAlerts, driverStats } from "@/data/mockData";
+import { useTrips } from "@/data/tripsStore";
 import { toast } from "sonner";
 
 const severityStyles = {
@@ -10,6 +11,7 @@ const severityStyles = {
 } as const;
 
 export function ParentPortal() {
+  const trips = useTrips();
   const [signed, setSigned] = useState<Record<string, boolean>>(
     Object.fromEntries(trips.map((t) => [t.id, t.signed])),
   );
