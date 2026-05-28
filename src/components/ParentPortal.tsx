@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Shield, AlertTriangle, CheckCircle2, Bell, TrendingUp } from "lucide-react";
 import { parentAlerts, driverStats } from "@/data/mockData";
 import { useTrips } from "@/data/tripsStore";
@@ -15,6 +15,14 @@ export function ParentPortal() {
   const [signed, setSigned] = useState<Record<string, boolean>>(
     Object.fromEntries(trips.map((t) => [t.id, t.signed])),
   );
+
+  useEffect(() => {
+    setSigned((prev) => {
+      const next = { ...prev };
+      for (const t of trips) if (!(t.id in next)) next[t.id] = t.signed;
+      return next;
+    });
+  }, [trips]);
 
   const totalHours = driverStats.totalHours;
   const signedTrips = Object.values(signed).filter(Boolean).length;
