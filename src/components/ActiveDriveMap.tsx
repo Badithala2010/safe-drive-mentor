@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
-import { MapContainer, TileLayer, Polyline, CircleMarker, useMap } from "react-leaflet";
+import { MapContainer, TileLayer, Polyline, CircleMarker, useMap, Marker } from "react-leaflet";
+import L from "leaflet";
+import { useDarkMode } from "@/hooks/useDarkMode";
 
 const ROUTE: [number, number][] = [
   [37.7749, -122.4194],
@@ -23,21 +25,39 @@ function Recenter({ pos }: { pos: [number, number] }) {
   return null;
 }
 
-export function ActiveDriveMap() {
+function pulseIcon() {
+  return L.divIcon({
+    className: "",
+    iconSize: [22, 22],
+    iconAnchor: [11, 11],
+    html: `
+      <div style="position:relative;width:22px;height:22px;">
+        <span class="radar-pulse" style="position:absolute;inset:0;border-radius:9999px;background:#1d72ff;opacity:.4;"></span>
+        <span class="radar-pulse" style="position:absolute;inset:0;border-radius:9999px;background:#1d72ff;opacity:.4;animation-delay:.9s;"></span>
+        <span style="position:absolute;inset:5px;border-radius:9999px;background:#1d72ff;border:2px solid #fff;box-shadow:0 1px 6px rgba(0,0,0,.35);"></span>
+      </div>`,
+  });
+}
+
+export function ActiveDriveMap({ className }: { className?: string } = {}) {
   const [mounted, setMounted] = useState(false);
   const [idx, setIdx] = useState(0);
+  const dark = useDarkMode();
   useEffect(() => setMounted(true), []);
   useEffect(() => {
     const t = setInterval(() => setIdx((i) => (i + 1) % ROUTE.length), 1800);
     return () => clearInterval(t);
   }, []);
   if (!mounted) {
-    return <div className="h-72 w-full rounded-2xl border border-border bg-muted animate-pulse" />;
+    return <div className={`${className ?? "h-72"} w-full rounded-2xl border border-border bg-muted animate-pulse`} />;
   }
   const pos = ROUTE[idx];
   const traveled = ROUTE.slice(0, idx + 1);
+  const tileUrl = dark
+    ? "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+    : "https://{s}.basemaps.cartocdn.com/voyager/{z}/{x}/{y}{r}.png";
   return (
-    <div className="h-72 w-full overflow-hidden rounded-2xl border border-border">
+    <div className={`${className ?? "h-72"} w-full overflow-hidden rounded-2xl border border-border`}>
       <MapContainer
         center={ROUTE[0]}
         zoom={15}
@@ -46,20 +66,13 @@ export function ActiveDriveMap() {
         style={{ height: "100%", width: "100%", background: "var(--muted)" }}
       >
         <TileLayer
-          attribution="&copy; OpenStreetMap"
-          url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png"
+          attribution="&copy; OpenStreetMap &copy; CARTO"
+          url={tileUrl}
         />
-        <Polyline positions={traveled} pathOptions={{ color: "#3b82f6", weight: 5, opacity: 0.9 }} />
-        <CircleMarker
-          center={pos}
-          radius={11}
-          pathOptions={{ color: "#ffffff", weight: 3, fillColor: "#3b82f6", fillOpacity: 1 }}
-        />
-        <CircleMarker
-          center={pos}
-          radius={22}
-          pathOptions={{ color: "#3b82f6", weight: 0, fillColor: "#3b82f6", fillOpacity: 0.18 }}
-        />
+        {/* Crisp blue route line with sleek white border */}
+        <Polyline positions={traveled} pathOptions={{ color: "#ffffff", weight: 9, opacity: 0.9 }} />
+        <Polyline positions={traveled} pathOptions={{ color: "#1d72ff", weight: 6, opacity: 0.85 }} />
+        <Marker position={pos} icon={pulseIcon()} />
         <Recenter pos={pos} />
       </MapContainer>
     </div>
