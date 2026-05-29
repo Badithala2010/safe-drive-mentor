@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Gauge, Square } from "lucide-react";
+import { Square } from "lucide-react";
 import { ActiveDriveMap } from "./ActiveDriveMap";
 
 function fmt(sec: number) {
@@ -26,66 +26,48 @@ export function ActiveDrive({ onEnd }: { onEnd: () => void }) {
   }, []);
 
   return (
-    <div className="px-5 pb-8 pt-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <p className="text-xs uppercase tracking-widest text-primary">● Drive in Progress</p>
-          <h1 className="text-2xl font-bold text-foreground">Tracking your drive</h1>
+    <div className="flex h-screen flex-col bg-background">
+      {/* Compact top status bar */}
+      <div className="flex items-center justify-between gap-3 border-b border-border bg-card/80 px-4 py-3 backdrop-blur">
+        <div className="flex items-center gap-2">
+          <span className="inline-flex h-2 w-2 animate-pulse rounded-full bg-destructive" />
+          <span className="text-xs font-semibold uppercase tracking-wider text-foreground">Live</span>
         </div>
-        <span className="rounded-full bg-primary/10 px-3 py-1.5 text-xs font-medium text-primary">LIVE</span>
-      </div>
-
-      <div
-        className="mt-6 flex flex-col items-center rounded-3xl border border-border p-6"
-        style={{ background: "var(--gradient-card)", boxShadow: "var(--shadow-glow)" }}
-      >
-        <span className="text-xs uppercase tracking-widest text-muted-foreground">Stopwatch</span>
-        <div className="mt-2 font-mono text-6xl font-bold tabular-nums text-foreground tracking-wider">
-          {fmt(seconds)}
-        </div>
-      </div>
-
-      <div className="mt-4 grid grid-cols-2 gap-3">
-        <div className="rounded-2xl border border-border p-4" style={{ background: "var(--gradient-card)" }}>
-          <div className="flex items-center gap-2 text-muted-foreground">
-            <Gauge className="h-4 w-4" />
-            <span className="text-xs uppercase tracking-wider">Speed</span>
+        <div className="flex items-center gap-4">
+          <div className="text-center">
+            <div className="font-mono text-base font-bold tabular-nums text-foreground">{fmt(seconds)}</div>
+            <div className="text-[9px] uppercase tracking-wider text-muted-foreground">Time</div>
           </div>
-          <div className="mt-2 font-mono text-4xl font-bold tabular-nums text-foreground">{speed}</div>
-          <div className="text-xs text-muted-foreground">mph</div>
-        </div>
-        <div className="rounded-2xl border border-border p-4" style={{ background: "var(--gradient-card)" }}>
-          <div className="text-xs uppercase tracking-wider text-muted-foreground">Status</div>
-          <div className="mt-2 text-base font-semibold text-foreground">Cruising</div>
-          <div className="mt-1 text-xs text-muted-foreground">GPS lock · clean signal</div>
-          <div className="mt-3 flex gap-1">
-            {[0, 1, 2, 3, 4].map((i) => (
-              <span
-                key={i}
-                className="h-1.5 flex-1 rounded-full"
-                style={{
-                  background:
-                    i < Math.round((speed - 25) / 5)
-                      ? "var(--gradient-primary)"
-                      : "var(--muted)",
-                }}
-              />
-            ))}
+          <div className="h-7 w-px bg-border" />
+          <div className="text-center">
+            <div className="font-mono text-base font-bold tabular-nums text-primary">{speed}</div>
+            <div className="text-[9px] uppercase tracking-wider text-muted-foreground">mph</div>
+          </div>
+          <div className="h-7 w-px bg-border" />
+          <div className="flex flex-col items-center">
+            <div className="flex h-7 w-7 items-center justify-center rounded-md border-2 border-destructive bg-card text-xs font-bold text-destructive">
+              35
+            </div>
+            <div className="mt-0.5 text-[9px] uppercase tracking-wider text-muted-foreground">Limit</div>
           </div>
         </div>
       </div>
 
-      <div className="mt-4">
-        <ActiveDriveMap />
+      {/* Large map — dominates the view */}
+      <div className="relative flex-1">
+        <ActiveDriveMap className="h-full" />
       </div>
 
-      <button
-        onClick={onEnd}
-        className="mt-6 flex w-full items-center justify-center gap-2 rounded-2xl bg-destructive px-6 py-4 text-base font-semibold text-destructive-foreground transition-transform active:scale-[0.98]"
-      >
-        <Square className="h-5 w-5" fill="currentColor" />
-        End & Save Drive
-      </button>
+      {/* Sleek bottom action bar */}
+      <div className="border-t border-border bg-card/95 px-5 py-3 backdrop-blur">
+        <button
+          onClick={onEnd}
+          className="mx-auto flex h-11 w-full max-w-xs items-center justify-center gap-2 rounded-full bg-destructive px-6 text-sm font-semibold text-destructive-foreground shadow-md transition-transform active:scale-[0.98]"
+        >
+          <Square className="h-3.5 w-3.5" fill="currentColor" />
+          End & Save Drive
+        </button>
+      </div>
     </div>
   );
 }
