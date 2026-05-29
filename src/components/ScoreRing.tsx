@@ -14,8 +14,8 @@ export function ScoreRing({ score, size = 200 }: Props) {
       <svg width={size} height={size} className="-rotate-90">
         <defs>
           <linearGradient id="scoreGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="oklch(0.72 0.18 155)" />
-            <stop offset="100%" stopColor="oklch(0.78 0.17 200)" />
+            <stop offset="0%" stopColor="var(--primary)" />
+            <stop offset="100%" stopColor="var(--primary-glow)" />
           </linearGradient>
         </defs>
         <circle
