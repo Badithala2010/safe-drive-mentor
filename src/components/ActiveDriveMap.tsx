@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { MapContainer, TileLayer, Polyline, CircleMarker, useMap, Marker } from "react-leaflet";
+import { MapContainer, TileLayer, Polyline, useMap, Marker } from "react-leaflet";
 import L from "leaflet";
 import { useDarkMode } from "@/hooks/useDarkMode";
 
