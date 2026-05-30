@@ -14,7 +14,87 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      profiles: {
+        Row: {
+          account_type: Database["public"]["Enums"]["account_type"]
+          created_at: string
+          email: string
+          id: string
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          account_type?: Database["public"]["Enums"]["account_type"]
+          created_at?: string
+          email?: string
+          id: string
+          name?: string
+          updated_at?: string
+        }
+        Update: {
+          account_type?: Database["public"]["Enums"]["account_type"]
+          created_at?: string
+          email?: string
+          id?: string
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      trips: {
+        Row: {
+          created_at: string
+          date: string
+          distance: string
+          distance_mi: number
+          duration: string
+          duration_min: number
+          events: Json
+          id: string
+          is_night: boolean
+          points: number
+          route: Json
+          score: number
+          signed: boolean
+          summary: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          date: string
+          distance: string
+          distance_mi?: number
+          duration: string
+          duration_min?: number
+          events?: Json
+          id?: string
+          is_night?: boolean
+          points?: number
+          route?: Json
+          score?: number
+          signed?: boolean
+          summary?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          date?: string
+          distance?: string
+          distance_mi?: number
+          duration?: string
+          duration_min?: number
+          events?: Json
+          id?: string
+          is_night?: boolean
+          points?: number
+          route?: Json
+          score?: number
+          signed?: boolean
+          summary?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -23,7 +103,7 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      account_type: "teen" | "parent"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +230,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      account_type: ["teen", "parent"],
+    },
   },
 } as const
