@@ -1,29 +1,33 @@
-import { useSyncExternalStore } from "react";
-import { trips as initialTrips, type Trip } from "./mockData";
+import { queryOptions, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { listTrips, insertTrip, signTrip } from "./trips.functions";
+import type { Trip } from "./mockData";
 
-let trips: Trip[] = [...initialTrips];
-const listeners = new Set<() => void>();
+export const tripsQueryOptions = queryOptions({
+  queryKey: ["trips"],
+  queryFn: () => listTrips(),
+});
 
-function emit() {
-  listeners.forEach((l) => l());
-}
-
-export function getTrips(): Trip[] {
-  return trips;
-}
-
-export function addTrip(trip: Trip) {
-  trips = [trip, ...trips];
-  emit();
-}
-
-function subscribe(listener: () => void) {
-  listeners.add(listener);
-  return () => {
-    listeners.delete(listener);
-  };
+export function useTripsQuery() {
+  return useQuery(tripsQueryOptions);
 }
 
 export function useTrips(): Trip[] {
-  return useSyncExternalStore(subscribe, getTrips, getTrips);
+  const { data } = useTripsQuery();
+  return data ?? [];
+}
+
+export function useAddTrip() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (input: Parameters<typeof insertTrip>[0]["data"]) => insertTrip({ data: input }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["trips"] }),
+  });
+}
+
+export function useSignTrip() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => signTrip({ data: { id } }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["trips"] }),
+  });
 }

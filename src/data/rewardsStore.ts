@@ -1,5 +1,3 @@
-import { useSyncExternalStore } from "react";
-import { useTrips } from "./tripsStore";
 import type { Trip } from "./mockData";
 
 export interface Level {
@@ -17,17 +15,10 @@ export const LEVELS: Level[] = [
   { num: 5, name: "Road Veteran", min: 5000, max: 8000 },
 ];
 
-// Base XP credited to brand-new accounts so the page feels alive.
-const BASE_XP = 2450;
-
-let bonusXp = 0;
-const tripPoints = new Map<string, number>();
-const listeners = new Set<() => void>();
-function emit() { listeners.forEach((l) => l()); }
+const BASE_XP = 0;
 
 export function pointsForTrip(trip: Trip): number {
-  // 10 pts per minute base + score bonus - event penalty
-  const mins = parseInt(trip.duration) || 10;
+  const mins = trip.durationMin ?? parseInt(trip.duration) ?? 10;
   const base = mins * 10;
   const scoreBonus = Math.round(trip.score * 1.5);
   const penalty = trip.events.length * 25;
@@ -35,27 +26,8 @@ export function pointsForTrip(trip: Trip): number {
   return Math.max(50, base + scoreBonus + night - penalty);
 }
 
-export function recordTripPoints(trip: Trip) {
-  if (tripPoints.has(trip.id)) return tripPoints.get(trip.id)!;
-  const pts = pointsForTrip(trip);
-  tripPoints.set(trip.id, pts);
-  bonusXp += pts;
-  emit();
-  return pts;
-}
-
-function subscribe(l: () => void) { listeners.add(l); return () => { listeners.delete(l); }; }
-
-function snapshot() { return bonusXp; }
-
-export function useTotalXp(): number {
-  const bonus = useSyncExternalStore(subscribe, snapshot, snapshot);
-  const trips = useTrips();
-  // Credit XP from seed trips automatically (not double counted via tripPoints)
-  const seedXp = trips
-    .filter((t) => !tripPoints.has(t.id))
-    .reduce((sum, t) => sum + pointsForTrip(t), 0);
-  return BASE_XP + seedXp + bonus;
+export function totalXp(trips: Trip[]): number {
+  return BASE_XP + trips.reduce((s, t) => s + (t.points ?? pointsForTrip(t)), 0);
 }
 
 export function getLevel(xp: number) {
@@ -75,6 +47,13 @@ export interface Badge {
 
 export const BADGES: Badge[] = [
   {
+    id: "first-drive",
+    name: "First Mile",
+    desc: "Complete your first drive",
+    icon: "🚗",
+    unlocked: (trips) => trips.length >= 1,
+  },
+  {
     id: "smooth",
     name: "Smooth Operator",
     desc: "3 trips with 0 hard braking",
@@ -87,7 +66,7 @@ export const BADGES: Badge[] = [
     desc: "5+ night hours logged",
     icon: "🌙",
     unlocked: (trips) => {
-      const mins = trips.filter((t) => t.isNight).reduce((s, t) => s + (parseInt(t.duration) || 0), 0);
+      const mins = trips.filter((t) => t.isNight).reduce((s, t) => s + (t.durationMin ?? parseInt(t.duration) ?? 0), 0);
       return mins >= 5 * 60;
     },
   },
@@ -97,13 +76,6 @@ export const BADGES: Badge[] = [
     desc: "Score a perfect 100 on a drive",
     icon: "💯",
     unlocked: (trips) => trips.some((t) => t.score >= 100),
-  },
-  {
-    id: "first-drive",
-    name: "First Mile",
-    desc: "Complete your first drive",
-    icon: "🚗",
-    unlocked: (trips) => trips.length >= 1,
   },
   {
     id: "streak-5",
@@ -117,10 +89,6 @@ export const BADGES: Badge[] = [
     name: "Highway Hero",
     desc: "Drive 15+ miles in one trip",
     icon: "🛣️",
-    unlocked: (trips) => trips.some((t) => parseFloat(t.distance) >= 15),
+    unlocked: (trips) => trips.some((t) => (t.distanceMi ?? parseFloat(t.distance)) >= 15),
   },
 ];
-
-export function getRecentTripPoints(tripId: string): number | undefined {
-  return tripPoints.get(tripId);
-}
