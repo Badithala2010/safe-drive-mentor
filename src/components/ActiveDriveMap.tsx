@@ -3,24 +3,10 @@ import { MapContainer, TileLayer, Polyline, useMap, Marker } from "react-leaflet
 import L from "leaflet";
 import { useDarkMode } from "@/hooks/useDarkMode";
 
-const ROUTE: [number, number][] = [
-  [37.7749, -122.4194],
-  [37.7755, -122.418],
-  [37.7762, -122.4165],
-  [37.7775, -122.415],
-  [37.7788, -122.4138],
-  [37.78, -122.412],
-  [37.781, -122.41],
-  [37.7822, -122.4085],
-  [37.7835, -122.407],
-  [37.7848, -122.4055],
-  [37.786, -122.404],
-];
-
-function Recenter({ pos }: { pos: [number, number] }) {
+function Recenter({ pos }: { pos: [number, number] | null }) {
   const map = useMap();
   useEffect(() => {
-    map.panTo(pos, { animate: true, duration: 0.8 });
+    if (pos) map.panTo(pos, { animate: true, duration: 0.8 });
   }, [map, pos]);
   return null;
 }
@@ -39,28 +25,31 @@ function pulseIcon() {
   });
 }
 
-export function ActiveDriveMap({ className }: { className?: string } = {}) {
+export function ActiveDriveMap({
+  className,
+  position,
+  route = [],
+}: {
+  className?: string;
+  position: [number, number] | null;
+  route?: [number, number][];
+} = { position: null }) {
   const [mounted, setMounted] = useState(false);
-  const [idx, setIdx] = useState(0);
   const dark = useDarkMode();
   useEffect(() => setMounted(true), []);
-  useEffect(() => {
-    const t = setInterval(() => setIdx((i) => (i + 1) % ROUTE.length), 1800);
-    return () => clearInterval(t);
-  }, []);
   if (!mounted) {
     return <div className={`${className ?? "h-72"} w-full rounded-2xl border border-border bg-muted animate-pulse`} />;
   }
-  const pos = ROUTE[idx];
-  const traveled = ROUTE.slice(0, idx + 1);
   const tileUrl = dark
     ? "https://{s}.basemaps.cartocdn.com/rastertiles/dark_all/{z}/{x}/{y}{r}.png"
     : "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png";
+  // Default center until first GPS fix arrives — neutral world view, NOT a hardcoded city
+  const center: [number, number] = position ?? route[0] ?? [39.5, -98.35];
   return (
     <div className={`${className ?? "h-72"} w-full overflow-hidden rounded-2xl border border-border`}>
       <MapContainer
-        center={ROUTE[0]}
-        zoom={15}
+        center={center}
+        zoom={position ? 16 : 4}
         scrollWheelZoom={false}
         zoomControl={false}
         style={{ height: "100%", width: "100%", background: "var(--muted)" }}
@@ -69,11 +58,14 @@ export function ActiveDriveMap({ className }: { className?: string } = {}) {
           attribution="&copy; OpenStreetMap &copy; CARTO"
           url={tileUrl}
         />
-        {/* Crisp blue route line with sleek white border */}
-        <Polyline positions={traveled} pathOptions={{ color: "#ffffff", weight: 9, opacity: 0.9 }} />
-        <Polyline positions={traveled} pathOptions={{ color: "#1d72ff", weight: 6, opacity: 0.85 }} />
-        <Marker position={pos} icon={pulseIcon()} />
-        <Recenter pos={pos} />
+        {route.length > 1 && (
+          <>
+            <Polyline positions={route} pathOptions={{ color: "#ffffff", weight: 9, opacity: 0.9 }} />
+            <Polyline positions={route} pathOptions={{ color: "#1d72ff", weight: 6, opacity: 0.85 }} />
+          </>
+        )}
+        {position && <Marker position={position} icon={pulseIcon()} />}
+        <Recenter pos={position} />
       </MapContainer>
     </div>
   );

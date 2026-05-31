@@ -68,13 +68,13 @@ export function computeDriverStats(trips: Trip[], name: string): DriverStats {
   })();
   return {
     name,
-    score: avgScore || 88,
+    score: avgScore,
     totalHours: +(totalMin / 60).toFixed(1),
     hoursGoal: HOURS_GOAL,
     nightHours: +(nightMin / 60).toFixed(1),
     nightGoal: NIGHT_GOAL,
-    topImprovement: topEvent,
-    weeklyTrend: trips.length >= 2 ? `+${Math.max(1, Math.round(Math.random() * 4))} pts this week` : "Start your first drive",
+    topImprovement: trips.length ? topEvent : "Ready for your first drive",
+    weeklyTrend: trips.length >= 2 ? `${trips.length} trips logged` : "Start your first drive",
   };
 }
 
