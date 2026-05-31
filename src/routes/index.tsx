@@ -15,6 +15,7 @@ import { ThemeManager } from "@/components/ThemeManager";
 import { useAddTrip, type NewTripInput } from "@/data/tripsStore";
 import { pointsForTrip } from "@/data/rewardsStore";
 import { useAuth } from "@/data/authStore";
+import type { TrackerSummary } from "@/hooks/useLocationTracker";
 import { Toaster } from "@/components/ui/sonner";
 import { toast } from "sonner";
 
@@ -50,6 +51,7 @@ function Index() {
   const [pendingSelectedId, setPendingSelectedId] = useState<string | null>(null);
   const [highlightRewardTripId, setHighlightRewardTripId] = useState<string | null>(null);
   const [authView, setAuthView] = useState<AuthView>("welcome");
+  const [lastSummary, setLastSummary] = useState<{ durationMin: number; avgSpeed: number; score: number } | null>(null);
 
   function handleAuthSuccess() {
     setAuthView("loading");
@@ -58,36 +60,36 @@ function Index() {
     }, 1000);
   }
 
-  const SUMMARY = { durationMin: 14, avgSpeed: 38, score: 94 };
-
   function startDrive() {
     setFlow("active");
   }
 
-  function endDrive() {
+  function endDrive(summary: TrackerSummary) {
     setFlow("processing");
     const isNight = new Date().getHours() >= 19 || new Date().getHours() < 6;
+    const durationMin = Math.max(1, Math.round(summary.durationSec / 60));
+    const avgSpeed = Math.round(summary.avgSpeedMph);
+    // Real telemetry-derived score: penalize hard events and excessive max speed.
+    const speedPenalty = Math.max(0, summary.maxSpeedMph - 65) * 0.6;
+    const eventPenalty = summary.hardEvents * 4;
+    const score = Math.max(40, Math.min(100, Math.round(100 - speedPenalty - eventPenalty)));
+    setLastSummary({ durationMin, avgSpeed, score });
+
+    const route = summary.route.length ? summary.route : [];
     const input: NewTripInput = {
       date: new Date().toLocaleDateString(undefined, { month: "short", day: "numeric" }),
-      duration: `${SUMMARY.durationMin} min`,
-      durationMin: SUMMARY.durationMin,
-      distance: "8.9 mi",
-      distanceMi: 8.9,
-      score: SUMMARY.score,
+      duration: `${durationMin} min`,
+      durationMin,
+      distance: `${summary.distanceMi.toFixed(1)} mi`,
+      distanceMi: summary.distanceMi,
+      score,
       isNight,
-      route: [
-        [37.7749, -122.4194],
-        [37.7762, -122.4165],
-        [37.7788, -122.4138],
-        [37.781, -122.41],
-        [37.7835, -122.407],
-        [37.786, -122.404],
-      ],
-      events: [
-        { type: "accel", lat: 37.7788, lng: -122.4138, label: "Mild acceleration", time: "Mid-drive" },
-      ],
+      route,
+      events: [],
       summary:
-        "Smooth drive overall. Speed and braking were well-controlled. One brief acceleration spike on a clear stretch — keep it gradual to stay above 90.",
+        summary.hardEvents > 0
+          ? `Detected ${summary.hardEvents} hard motion event${summary.hardEvents === 1 ? "" : "s"}. Average ${avgSpeed} mph over ${summary.distanceMi.toFixed(1)} mi — focus on smoother acceleration and braking.`
+          : `Smooth drive. Average ${avgSpeed} mph over ${summary.distanceMi.toFixed(1)} mi with no hard motion events detected.`,
       points: 0,
     };
     input.points = pointsForTrip({
@@ -174,14 +176,15 @@ function Index() {
   }
 
   if (flow === "success" && savedTripId) {
+    const s = lastSummary ?? { durationMin: 0, avgSpeed: 0, score: 0 };
     return (
       <>
         <ThemeManager />
         <div className="mx-auto min-h-screen w-full max-w-md bg-background">
           <DriveSuccess
-            duration={`${SUMMARY.durationMin} min`}
-            avgSpeed={SUMMARY.avgSpeed}
-            score={SUMMARY.score}
+            duration={`${s.durationMin} min`}
+            avgSpeed={s.avgSpeed}
+            score={s.score}
             onViewReport={viewReport}
           />
           <Toaster position="top-center" />
