@@ -44,6 +44,7 @@ export function Dashboard({ onStartDrive }: { onStartDrive: () => void }) {
   const trips = useTrips();
   const { user } = useAuth();
   const driverStats = computeDriverStats(trips, user?.name ?? "Driver");
+  const hasTrips = trips.length > 0;
   void HOURS_GOAL; void NIGHT_GOAL;
   return (
     <div className="px-5 pb-8 pt-6">
@@ -65,10 +66,26 @@ export function Dashboard({ onStartDrive }: { onStartDrive: () => void }) {
         <span className="text-xs uppercase tracking-widest text-muted-foreground">
           Safe Driving Score
         </span>
-        <div className="mt-4">
-          <ScoreRing score={driverStats.score} />
-        </div>
-        <p className="mt-4 text-sm text-muted-foreground">Above average for your age group</p>
+        {hasTrips ? (
+          <>
+            <div className="mt-4">
+              <ScoreRing score={driverStats.score} />
+            </div>
+            <p className="mt-4 text-sm text-muted-foreground">
+              Based on {trips.length} logged {trips.length === 1 ? "trip" : "trips"}
+            </p>
+          </>
+        ) : (
+          <>
+            <div className="mt-4 flex h-32 w-32 items-center justify-center rounded-full border-2 border-dashed border-border">
+              <Car className="h-10 w-10 text-muted-foreground" />
+            </div>
+            <p className="mt-4 text-sm font-medium text-foreground">Ready for your first drive</p>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Your Safe Driving Score will appear after your first logged trip.
+            </p>
+          </>
+        )}
       </div>
 
       <div className="mt-5 grid grid-cols-2 gap-3">
@@ -94,14 +111,18 @@ export function Dashboard({ onStartDrive }: { onStartDrive: () => void }) {
       >
         <div className="flex items-center gap-2 text-muted-foreground">
           <AlertTriangle className="h-4 w-4 text-warning" />
-          <span className="text-xs uppercase tracking-wider">Top Area to Improve</span>
+          <span className="text-xs uppercase tracking-wider">
+            {hasTrips ? "Top Area to Improve" : "AI Coach"}
+          </span>
         </div>
         <p className="mt-2 text-base font-medium text-foreground">
           {driverStats.topImprovement}
         </p>
-        <p className="mt-1 text-xs text-muted-foreground">
-          Slow down 5–10 mph before entering turns; accelerate smoothly through the apex.
-        </p>
+        {hasTrips && (
+          <p className="mt-1 text-xs text-muted-foreground">
+            Tips are generated from your real telemetry after each trip.
+          </p>
+        )}
       </div>
 
       <button
