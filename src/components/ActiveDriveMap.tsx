@@ -54,8 +54,8 @@ export function ActiveDriveMap({ className }: { className?: string } = {}) {
   const pos = ROUTE[idx];
   const traveled = ROUTE.slice(0, idx + 1);
   const tileUrl = dark
-    ? "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
-    : "https://{s}.basemaps.cartocdn.com/voyager/{z}/{x}/{y}{r}.png";
+    ? "https://{s}.basemaps.cartocdn.com/rastertiles/dark_all/{z}/{x}/{y}{r}.png"
+    : "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png";
   return (
     <div className={`${className ?? "h-72"} w-full overflow-hidden rounded-2xl border border-border`}>
       <MapContainer
