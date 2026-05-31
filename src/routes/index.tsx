@@ -12,11 +12,11 @@ import { SignUp } from "@/components/auth/SignUp";
 import { SignIn } from "@/components/auth/SignIn";
 import { ProfileMenu } from "@/components/auth/ProfileMenu";
 import { ThemeManager } from "@/components/ThemeManager";
-import { addTrip } from "@/data/tripsStore";
-import { recordTripPoints } from "@/data/rewardsStore";
-import { useUser } from "@/data/authStore";
-import type { Trip } from "@/data/mockData";
+import { useAddTrip, type NewTripInput } from "@/data/tripsStore";
+import { pointsForTrip } from "@/data/rewardsStore";
+import { useAuth } from "@/data/authStore";
 import { Toaster } from "@/components/ui/sonner";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -42,10 +42,11 @@ const tabs: { id: Tab; label: string; icon: any }[] = [
 ];
 
 function Index() {
-  const user = useUser();
+  const { user, loading } = useAuth();
+  const addTripMutation = useAddTrip();
   const [tab, setTab] = useState<Tab>("dashboard");
   const [flow, setFlow] = useState<Flow>("idle");
-  const [savedTrip, setSavedTrip] = useState<Trip | null>(null);
+  const [savedTripId, setSavedTripId] = useState<string | null>(null);
   const [pendingSelectedId, setPendingSelectedId] = useState<string | null>(null);
   const [highlightRewardTripId, setHighlightRewardTripId] = useState<string | null>(null);
   const [authView, setAuthView] = useState<AuthView>("welcome");
@@ -53,7 +54,7 @@ function Index() {
   function handleAuthSuccess() {
     setAuthView("loading");
     setTimeout(() => {
-      setAuthView("welcome"); // reset for future logouts
+      setAuthView("welcome");
     }, 1000);
   }
 
@@ -65,47 +66,68 @@ function Index() {
 
   function endDrive() {
     setFlow("processing");
-    setTimeout(() => {
-      const id = `t-${Date.now()}`;
-      const newTrip: Trip = {
-        id,
-        date: "Just now",
-        duration: `${SUMMARY.durationMin} min`,
-        distance: "8.9 mi",
-        score: SUMMARY.score,
-        isNight: new Date().getHours() >= 19 || new Date().getHours() < 6,
-        route: [
-          [37.7749, -122.4194],
-          [37.7762, -122.4165],
-          [37.7788, -122.4138],
-          [37.781, -122.41],
-          [37.7835, -122.407],
-          [37.786, -122.404],
-        ],
-        events: [
-          { type: "accel", lat: 37.7788, lng: -122.4138, label: "Mild acceleration", time: "Mid-drive" },
-        ],
-        summary:
-          "Smooth drive overall. Speed and braking were well-controlled. One brief acceleration spike on a clear stretch — keep it gradual to stay above 90.",
-        signed: false,
-      };
-      addTrip(newTrip);
-      recordTripPoints(newTrip);
-      setSavedTrip(newTrip);
-      setFlow("success");
-    }, 2000);
+    const isNight = new Date().getHours() >= 19 || new Date().getHours() < 6;
+    const input: NewTripInput = {
+      date: new Date().toLocaleDateString(undefined, { month: "short", day: "numeric" }),
+      duration: `${SUMMARY.durationMin} min`,
+      durationMin: SUMMARY.durationMin,
+      distance: "8.9 mi",
+      distanceMi: 8.9,
+      score: SUMMARY.score,
+      isNight,
+      route: [
+        [37.7749, -122.4194],
+        [37.7762, -122.4165],
+        [37.7788, -122.4138],
+        [37.781, -122.41],
+        [37.7835, -122.407],
+        [37.786, -122.404],
+      ],
+      events: [
+        { type: "accel", lat: 37.7788, lng: -122.4138, label: "Mild acceleration", time: "Mid-drive" },
+      ],
+      summary:
+        "Smooth drive overall. Speed and braking were well-controlled. One brief acceleration spike on a clear stretch — keep it gradual to stay above 90.",
+      points: 0,
+    };
+    input.points = pointsForTrip({
+      id: "tmp", date: input.date, duration: input.duration, distance: input.distance,
+      score: input.score, isNight: input.isNight, route: input.route, events: input.events,
+      summary: input.summary, signed: false, durationMin: input.durationMin, distanceMi: input.distanceMi,
+    });
+    addTripMutation.mutate(input, {
+      onSuccess: (trip) => {
+        setSavedTripId(trip.id);
+        setFlow("success");
+      },
+      onError: (e: any) => {
+        toast.error("Couldn't save drive", { description: e?.message ?? "Try again" });
+        setFlow("idle");
+      },
+    });
   }
 
   function viewReport() {
-    if (savedTrip) {
-      setPendingSelectedId(savedTrip.id);
-      setHighlightRewardTripId(savedTrip.id);
+    if (savedTripId) {
+      setPendingSelectedId(savedTripId);
+      setHighlightRewardTripId(savedTripId);
     }
     setFlow("idle");
     setTab("trips");
   }
 
   // ---------- AUTH GATE ----------
+  if (loading) {
+    return (
+      <>
+        <ThemeManager />
+        <div className="mx-auto flex min-h-screen w-full max-w-md items-center justify-center bg-background">
+          <Loader2 className="h-10 w-10 animate-spin text-primary" />
+        </div>
+      </>
+    );
+  }
+
   if (!user) {
     if (authView === "loading") {
       return (
@@ -151,7 +173,7 @@ function Index() {
     );
   }
 
-  if (flow === "success" && savedTrip) {
+  if (flow === "success" && savedTripId) {
     return (
       <>
         <ThemeManager />
@@ -219,7 +241,7 @@ function Index() {
         <div className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-background/95 backdrop-blur-sm">
           <Loader2 className="h-12 w-12 animate-spin text-primary" />
           <p className="mt-6 text-base font-semibold text-foreground">
-            Processing Telemetry Data
+            Saving Telemetry to Cloud
           </p>
           <p className="mt-1 text-sm text-muted-foreground">Analyzing Drive...</p>
         </div>
