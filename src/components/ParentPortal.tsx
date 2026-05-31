@@ -1,7 +1,7 @@
-import { useEffect, useState } from "react";
 import { Shield, AlertTriangle, CheckCircle2, Bell, TrendingUp } from "lucide-react";
-import { parentAlerts, driverStats } from "@/data/mockData";
-import { useTrips } from "@/data/tripsStore";
+import { computeDriverStats, computeParentAlerts } from "@/data/mockData";
+import { useTrips, useSignTrip } from "@/data/tripsStore";
+import { useAuth } from "@/data/authStore";
 import { toast } from "sonner";
 
 const severityStyles = {
@@ -12,20 +12,12 @@ const severityStyles = {
 
 export function ParentPortal() {
   const trips = useTrips();
-  const [signed, setSigned] = useState<Record<string, boolean>>(
-    Object.fromEntries(trips.map((t) => [t.id, t.signed])),
-  );
-
-  useEffect(() => {
-    setSigned((prev) => {
-      const next = { ...prev };
-      for (const t of trips) if (!(t.id in next)) next[t.id] = t.signed;
-      return next;
-    });
-  }, [trips]);
-
+  const { user } = useAuth();
+  const driverStats = computeDriverStats(trips, user?.name ?? "Driver");
+  const parentAlerts = computeParentAlerts(trips);
+  const signMutation = useSignTrip();
   const totalHours = driverStats.totalHours;
-  const signedTrips = Object.values(signed).filter(Boolean).length;
+  const signedTrips = trips.filter((t) => t.signed).length;
 
   return (
     <div className="px-5 pb-8 pt-6">
@@ -99,16 +91,21 @@ export function ParentPortal() {
               <div className="text-sm text-foreground">{t.date}</div>
               <div className="text-xs text-muted-foreground">{t.duration} · {t.distance} · score {t.score}</div>
             </div>
-            {signed[t.id] ? (
+            {t.signed ? (
               <span className="flex items-center gap-1 rounded-full bg-primary/15 px-3 py-1.5 text-xs font-medium text-primary">
                 <CheckCircle2 className="h-3.5 w-3.5" /> Signed
               </span>
             ) : (
               <button
                 onClick={() => {
-                  setSigned((s) => ({ ...s, [t.id]: true }));
-                  toast.success("Drive signed off", { description: `${t.duration} added to official log.` });
+                  signMutation.mutate(t.id, {
+                    onSuccess: () =>
+                      toast.success("Drive signed off", { description: `${t.duration} added to official log.` }),
+                    onError: (e: any) =>
+                      toast.error("Could not sign", { description: e?.message ?? "Try again" }),
+                  });
                 }}
+                disabled={signMutation.isPending}
                 className="rounded-full px-3 py-1.5 text-xs font-semibold text-primary-foreground"
                 style={{ background: "var(--gradient-primary)" }}
               >

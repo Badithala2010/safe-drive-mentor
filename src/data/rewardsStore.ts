@@ -1,4 +1,5 @@
 import type { Trip } from "./mockData";
+import { useTrips } from "./tripsStore";
 
 export interface Level {
   num: number;
@@ -28,6 +29,16 @@ export function pointsForTrip(trip: Trip): number {
 
 export function totalXp(trips: Trip[]): number {
   return BASE_XP + trips.reduce((s, t) => s + (t.points ?? pointsForTrip(t)), 0);
+}
+
+export function useTotalXp(): number {
+  const trips = useTrips();
+  return totalXp(trips);
+}
+
+export function getRecentTripPoints(_id: string): number | undefined {
+  // Placeholder — points are persisted on the trip row itself.
+  return undefined;
 }
 
 export function getLevel(xp: number) {

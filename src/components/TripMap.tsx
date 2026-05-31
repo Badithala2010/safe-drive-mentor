@@ -21,8 +21,8 @@ export function TripMap({ trip }: { trip: Trip }) {
     return <div className="h-72 w-full rounded-2xl border border-border bg-muted animate-pulse" />;
   }
   const tileUrl = dark
-    ? "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
-    : "https://{s}.basemaps.cartocdn.com/voyager/{z}/{x}/{y}{r}.png";
+    ? "https://{s}.basemaps.cartocdn.com/rastertiles/dark_all/{z}/{x}/{y}{r}.png"
+    : "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png";
   return (
     <div className="h-72 w-full overflow-hidden rounded-2xl border border-border">
       <MapContainer

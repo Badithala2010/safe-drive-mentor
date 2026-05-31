@@ -1,6 +1,8 @@
 import { Car, Clock, Moon, TrendingUp, AlertTriangle } from "lucide-react";
 import { ScoreRing } from "./ScoreRing";
-import { driverStats } from "@/data/mockData";
+import { useTrips } from "@/data/tripsStore";
+import { computeDriverStats, HOURS_GOAL, NIGHT_GOAL } from "@/data/mockData";
+import { useAuth } from "@/data/authStore";
 
 function MetricCard({
   icon: Icon,
@@ -39,6 +41,10 @@ function MetricCard({
 }
 
 export function Dashboard({ onStartDrive }: { onStartDrive: () => void }) {
+  const trips = useTrips();
+  const { user } = useAuth();
+  const driverStats = computeDriverStats(trips, user?.name ?? "Driver");
+  void HOURS_GOAL; void NIGHT_GOAL;
   return (
     <div className="px-5 pb-8 pt-6">
       <div className="flex items-center justify-between">
